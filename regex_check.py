@@ -1,5 +1,5 @@
-__author__: Ahmed Elsers
-__Email__: ahmed.elsersi@gmail.com
+__author__ = "Ahmed Elsers"
+__Email__ = "ahmed.elsersi@gmail.com"
 
 
 import re
