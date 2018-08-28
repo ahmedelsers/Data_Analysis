@@ -14,8 +14,12 @@ import platform
 import socket
 import argparse
 import ipaddress
-import pandas as pd
+#import pandas as pd
 from textwrap import dedent
+try:
+    import pandas as pd
+except ModuleNotFoundError:
+    os.system('pip install pandas')
 
 
 parser = argparse.ArgumentParser(description=dedent("""Scan Network IP range, and get the FQDN for each IP,
