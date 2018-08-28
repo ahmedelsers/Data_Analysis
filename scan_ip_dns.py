@@ -14,12 +14,8 @@ import platform
 import socket
 import argparse
 import ipaddress
-#import pandas as pd
+import pandas as pd
 from textwrap import dedent
-try:
-    import pandas as pd
-except ModuleNotFoundError:
-    os.system('pip install pandas')
 
 
 parser = argparse.ArgumentParser(description=dedent("""Scan Network IP range, and get the FQDN for each IP,
@@ -28,7 +24,7 @@ parser = argparse.ArgumentParser(description=dedent("""Scan Network IP range, an
 
 group = parser.add_mutually_exclusive_group()
 group.add_argument("-v", "--version", help="print version",
-                   action="version", version="%(prog)s v2.0")
+                   action="version", version="%(prog)s v3.0")
 parser.add_argument("-ip", "--ip-range", dest='IP', help="Enter the Network IP range, ex. 10.6.1.0/24",
                     default='10.6.1.0/24', type=str)
 parser.add_argument("-o", "--output", help="the output file name", dest='file_name', default='scan_output.csv')
@@ -91,3 +87,5 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print()
         sys.exit(0)
+    except ModuleNotFoundError:
+        os.system('pip install pandas')
