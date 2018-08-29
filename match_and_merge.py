@@ -17,11 +17,9 @@ __Email__ = "ahmed.elsersi@gmail.com"
 import os
 import sys
 import argparse
-import fileinput
+import re
 import pandas as pd
 from textwrap import dedent
-
-from regex_check import *
 
 parser = argparse.ArgumentParser(description=dedent("""Search & Match three csv/excel FILEs containing
                                                        IP/MAC, IP/DNS and MAC/PORT, and save the output to
@@ -30,10 +28,27 @@ parser = argparse.ArgumentParser(description=dedent("""Search & Match three csv/
 
 group = parser.add_mutually_exclusive_group()
 group.add_argument("-v", "--version", help="print version", action="version", version="%(prog)s v1.0")
-parser.add_argument("FILE", nargs="*")
+parser.add_argument("FILE", nargs="+")
 args = parser.parse_args()
 
+## Regular Expresions to extract IPs, MACs, DNSs and PORTs
+def regex_check_ip(ip):
+    ip = str(ip).strip()
+    try:
+        ip_regex_check_result = [0<=int(x)<256 for x in re.split('\.',re.match(r'^\d+\.\d+\.\d+\.\d+$',str(ip)).group(0))].count(True)==4
+        if ip_regex_check_result:
+            return ip
+    except AttributeError:
+        return 'None_' + ip
 
+def regex_check_mac(mac):
+    mac = str(mac).strip()
+    try:
+        mac_regex_check_result = re.match('([a-fA-F0-9]{4}[:|\-|\.]?){3}$', mac).group(0) == mac
+        if mac_regex_check_result:
+            return mac
+    except AttributeError:
+        return 'None_' + mac
 
 # Make a list of the files which are going to be used, and convert them if they are in xlsx to csv format if needed
 def get_csv_xlsx_files_list():
@@ -47,6 +62,12 @@ def get_csv_xlsx_files_list():
         else:
             print(file, 'is not in csv or xlsx format.')
             sys.exit(0)
+        if not os.path.exists(file):
+            print(file, end=': ')
+            raise FileNotFoundError
+        elif os.path.isdir(file):
+            print(file, end=': ')
+            raise IsADirectoryError
     if xlsx_list:
         return csv_list + convert_to_csv(xlsx_list)
     else:
@@ -88,6 +109,7 @@ def merge_save_data():
     first_frame = frames[0]
     for frame in frames[1:]:
         first_frame = first_frame.merge(frame)
+    first_frame['Rack'] = 12
     first_frame.to_csv('final.csv', index=False)
 
 
@@ -96,11 +118,10 @@ def merge_save_data():
 if __name__ == '__main__':
     try:
         merge_save_data()
-
     except FileNotFoundError:
-        print(fileinput.filename(),":", "No such file or directory")
+        print("No such file name.")
     except IsADirectoryError:
-        print(fileinput.filename(),":", "Is a directory")
+        print("File name is a directory.")
     except KeyboardInterrupt:
         print()
         sys.exit(0)
