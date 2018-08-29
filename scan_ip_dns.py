@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 __author__ = 'Ahmed Elsers'
 __Email__ = 'ahmed.elsersi@gmail.com'
 
@@ -14,8 +15,12 @@ import platform
 import socket
 import argparse
 import ipaddress
-import pandas as pd
 from textwrap import dedent
+try:
+    import pandas as pd
+except ModuleNotFoundError:
+    os.system('pip install pandas')
+    import pandas as pd
 
 
 parser = argparse.ArgumentParser(description=dedent("""Scan Network IP range, and get the FQDN for each IP,
@@ -27,9 +32,9 @@ group.add_argument("-v", "--version", help="print version",
                    action="version", version="%(prog)s v3.0")
 parser.add_argument("-ip", "--ip-range", dest='IP', help="Enter the Network IP range, ex. 10.6.1.0/24",
                     default='10.6.1.0/24', type=str)
-parser.add_argument("-o", "--output", help="the output file name", dest='file_name', default='scan_output.csv')
+parser.add_argument("-o", "--output", help="the output file name",
+                    dest='file_name', default='scan_output.csv')
 args = parser.parse_args()
-
 
 
 def check_input_file():
@@ -43,7 +48,6 @@ def check_input_file():
         raise IsADirectoryError
     else:
         return file_name
-
 
 
 def scan_network():
@@ -61,7 +65,8 @@ def scan_network():
             if test:
                 IP_FQDN.append((ip, socket.getfqdn(ip)))
             else:
-                IP_FQDN.append((ip, socket.getfqdn(ip), "Server is not reachable."))
+                IP_FQDN.append(
+                    (ip, socket.getfqdn(ip), "Server is not reachable."))
     except ValueError:
         print("Please enter a valid network IP/prefix_len, ex. 10.6.1.0/24, 10.6.0.0/16")
     return IP_FQDN
@@ -72,6 +77,7 @@ def save_data():
     IP_FQDN = scan_network()
     data = pd.DataFrame(data=IP_FQDN, columns=['IP', 'FQDN', 'Status'])
     data.to_csv(file_name, index=False)
+
 
 def main():
     save_data()
