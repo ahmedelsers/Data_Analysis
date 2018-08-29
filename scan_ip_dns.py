@@ -43,8 +43,10 @@ def check_input_file():
     else:
         file_name = args.file_name + '.csv'
     if os.path.isfile(file_name):
+        print(file_name, end=': ')
         raise FileExistsError
     elif os.path.isdir(file_name):
+        print(file_name, end=': ')
         raise IsADirectoryError
     else:
         return file_name
@@ -87,9 +89,9 @@ if __name__ == '__main__':
     try:
         main()
     except FileExistsError:
-        print(args.file_name, ":", "file exists, choose another name.")
+        print("file exists, choose another name.")
     except IsADirectoryError:
-        print(args.file_name, ":", "Is a directory, choose another name.")
+        print("Is a directory, choose another name.")
     except KeyboardInterrupt:
         print()
         sys.exit(0)
