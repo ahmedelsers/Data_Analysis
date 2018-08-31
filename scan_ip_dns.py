@@ -69,8 +69,7 @@ def scan_network():
                 if test:
                     IP_FQDN.append((ip, socket.getfqdn(ip)))
                 else:
-                    IP_FQDN.append(
-                        (ip, socket.getfqdn(ip), "Server is not reachable."))
+                    IP_FQDN.append((ip, socket.getfqdn(ip), "Server is not reachable."))
     except ValueError:
         print("Please enter a valid network IP/prefix_len, ex. 10.6.1.0/24, 10.6.0.0/16")
     return IP_FQDN
