@@ -29,9 +29,9 @@ parser = argparse.ArgumentParser(description=dedent("""Scan Network IP range, an
 
 group = parser.add_mutually_exclusive_group()
 group.add_argument("-v", "--version", help="print version",
-                   action="version", version="%(prog)s v3.0")
+                   action="version", version="%(prog)s v4.0")
 parser.add_argument("-ip", "--ip-range", dest='IP', help="Enter the Network IP range, ex. 10.6.1.0/24",
-                    default='10.6.1.0/24', type=str)
+                    default='10.6.1.0/24', type=str, nargs='+')
 parser.add_argument("-o", "--output", help="the output file name",
                     dest='file_name', default='scan_output.csv')
 args = parser.parse_args()
@@ -54,21 +54,23 @@ def check_input_file():
 
 def scan_network():
     IP_FQDN = []
+    IP_NETWORKS_LIST = [ipaddress.ip_network(ip_network) for ip_network in args.IP ]
     try:
-        ip_list = [ip.compressed for ip in ipaddress.ip_network(args.IP)]
-        ip_list.pop(0)
-        ip_list.pop()
-        if platform.system() == 'Windows':
-            command = "ping -n 1 -l 1 -s 1 -w 1 "
-        else:
-            command = "ping -c 1 -l 1 -s 1 -W 1 "
-        for ip in ip_list:
-            test = True if os.system(command + ip) is 0 else False
-            if test:
-                IP_FQDN.append((ip, socket.getfqdn(ip)))
+        for ip_network in IP_NETWORKS_LIST:
+            ip_list = [ip.compressed for ip in ip_network]
+            ip_list.pop(0)
+            ip_list.pop()
+            if platform.system() == 'Windows':
+                command = "ping -n 1 -l 1 -s 1 -w 1 "
             else:
-                IP_FQDN.append(
-                    (ip, socket.getfqdn(ip), "Server is not reachable."))
+                command = "ping -c 1 -l 1 -s 1 -W 1 "
+            for ip in ip_list:
+                test = True if os.system(command + ip) is 0 else False
+                if test:
+                    IP_FQDN.append((ip, socket.getfqdn(ip)))
+                else:
+                    IP_FQDN.append(
+                        (ip, socket.getfqdn(ip), "Server is not reachable."))
     except ValueError:
         print("Please enter a valid network IP/prefix_len, ex. 10.6.1.0/24, 10.6.0.0/16")
     return IP_FQDN
