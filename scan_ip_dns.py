@@ -11,16 +11,15 @@ __Email__ = 'ahmed.elsersi@gmail.com'
 
 import os
 import sys
-import platform
 import socket
 import argparse
 import ipaddress
 from textwrap import dedent
-try:
-    import pandas as pd
-except ModuleNotFoundError:
-    os.system('pip install pandas')
-    import pandas as pd
+
+# Install Pandas first 'pip install pandas'
+import pandas as pd
+
+
 
 
 parser = argparse.ArgumentParser(description=dedent("""Scan Network IP range, and get the FQDN for each IP,
@@ -53,24 +52,31 @@ def check_input_file():
 
 
 def scan_network():
+    command = "ping -c 1 -l 1 -s 1 -W 1 "
+    IP_FQDN = []
+    IP_NETWORKS_LIST = [ipaddress.ip_network(ip_network) for ip_network in args.IP]
     try:
-        IP_FQDN = []
-        IP_NETWORKS_LIST = [ipaddress.ip_network(ip_network) for ip_network in args.IP]
         for ip_network in IP_NETWORKS_LIST:
             ip_list = [ip.compressed for ip in ip_network]
             ip_list.pop(0)
             ip_list.pop()
-            if platform.system() == 'Windows':
-                command = "ping -n 1 -l 1 -s 1 -w 1 "
-            else:
-                command = "ping -c 1 -l 1 -s 1 -W 1 "
             for ip in ip_list:
                 test = True if os.system(command + ip) is 0 else False
                 if test:
-                    IP_FQDN.append((ip, socket.getfqdn(ip)))
+                    os_linux = True if os.system(f'sudo nmap -sT -sV -O {ip}|grep -i "OS CPE: cpe:/o:linux"') is 0 else False
+                    os_sun = True if os.system(f'sudo nmap -sT -sV -O {ip}|grep -i "OS CPE: cpe:/o:sun"') is 0 else False
+                    os_windows = True if os.system(f'sudo nmap -sT -sV -O {ip}|grep -i "OS: Windows; CPE: cpe:/o:microsoft"') is 0 else False
+                    if os_linux:
+                        IP_FQDN.append((ip, socket.getfqdn(ip), 'Linux', 'Up'))
+                    elif os_sun:
+                        IP_FQDN.append((ip, socket.getfqdn(ip), 'Sun/Unix', 'Up'))
+                    elif os_windows:
+                        IP_FQDN.append((ip, socket.getfqdn(ip), 'Windows', 'Up'))
+                    else:
+                        IP_FQDN.append((ip, socket.getfqdn(ip), 'Unknown OS', 'Up'))
                 else:
-                    IP_FQDN.append((ip, socket.getfqdn(ip), "Server is not reachable."))
-    except ValueError and TypeError:
+                    IP_FQDN.append((ip, socket.getfqdn(ip), " ", "Server is Unreachable/Down"))
+    except ValueError and TypeError and IndexError:
         print("Please enter a valid network IP/prefix_len, ex. 10.6.1.0/24 172.16.1.0/24")
         sys.exit(0)
     return IP_FQDN
@@ -79,7 +85,7 @@ def scan_network():
 def save_data():
     file_name = check_input_file()
     IP_FQDN = scan_network()
-    data = pd.DataFrame(data=IP_FQDN, columns=['IP', 'FQDN', 'Status'])
+    data = pd.DataFrame(data=IP_FQDN, columns=['IP', 'FQDN', 'OS', 'Status'])
     data.to_csv(file_name, index=False)
 
 
