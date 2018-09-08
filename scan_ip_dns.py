@@ -63,19 +63,9 @@ def scan_network():
             for ip in ip_list:
                 test = True if os.system(command + ip) is 0 else False
                 if test:
-                    os_linux = True if os.system(f'sudo nmap -sT -sV -O {ip}|grep -i "OS CPE: cpe:/o:linux"') is 0 else False
-                    os_sun = True if os.system(f'sudo nmap -sT -sV -O {ip}|grep -i "OS CPE: cpe:/o:sun"') is 0 else False
-                    os_windows = True if os.system(f'sudo nmap -sT -sV -O {ip}|grep -i "OS: Windows; CPE: cpe:/o:microsoft"') is 0 else False
-                    if os_linux:
-                        IP_FQDN.append((ip, socket.getfqdn(ip), 'Linux', 'Up'))
-                    elif os_sun:
-                        IP_FQDN.append((ip, socket.getfqdn(ip), 'Sun/Unix', 'Up'))
-                    elif os_windows:
-                        IP_FQDN.append((ip, socket.getfqdn(ip), 'Windows', 'Up'))
-                    else:
-                        IP_FQDN.append((ip, socket.getfqdn(ip), 'Unknown OS', 'Up'))
+                    IP_FQDN.append((ip, socket.getfqdn(ip), 'Server is Up'))
                 else:
-                    IP_FQDN.append((ip, socket.getfqdn(ip), " ", "Server is Unreachable/Down"))
+                    IP_FQDN.append((ip, socket.getfqdn(ip), "Server is Unreachable or Down"))
     except ValueError and TypeError and IndexError:
         print("Please enter a valid network IP/prefix_len, ex. 10.6.1.0/24 172.16.1.0/24")
         sys.exit(0)
@@ -85,7 +75,7 @@ def scan_network():
 def save_data():
     file_name = check_input_file()
     IP_FQDN = scan_network()
-    data = pd.DataFrame(data=IP_FQDN, columns=['IP', 'FQDN', 'OS', 'Status'])
+    data = pd.DataFrame(data=IP_FQDN, columns=['IP', 'FQDN', 'Status'])
     data.to_csv(file_name, index=False)
 
 
