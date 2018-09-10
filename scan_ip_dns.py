@@ -66,7 +66,7 @@ def scan_network():
                     IP_FQDN.append((ip, socket.getfqdn(ip), 'Server is Up'))
                 else:
                     IP_FQDN.append((ip, socket.getfqdn(ip), "Server is Unreachable or Down"))
-    except ValueError and TypeError and IndexError:
+    except (ValueError, TypeError, IndexError):
         print("Please enter a valid network IP/prefix_len, ex. 10.6.1.0/24 172.16.1.0/24")
         sys.exit(0)
     return IP_FQDN
